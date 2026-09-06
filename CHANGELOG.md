@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+Client-only update compatible with server 0.2.0.
+
+- Prevent Recipe Essentials and similar recipe-book mixins from casting the
+  combined backpack menu to Minecraft's `RecipeBookMenu` during screen ticks.
+
 ## 0.2.1
 
 Client-only update compatible with server 0.2.0.

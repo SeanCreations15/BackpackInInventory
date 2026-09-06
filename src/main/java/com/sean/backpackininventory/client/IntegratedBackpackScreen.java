@@ -2,9 +2,11 @@ package com.sean.backpackininventory.client;
 
 import com.sean.backpackininventory.menu.BackpackDescriptor;
 import com.sean.backpackininventory.menu.IntegratedBackpackMenu;
+import com.sean.backpackininventory.menu.RecipeBookAdapter;
 import com.sean.backpackininventory.network.SelectBackpackPayload;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -44,6 +46,7 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
     private static final ResourceLocation CURIOS_INVENTORY = ResourceLocation.fromNamespaceAndPath(
             "curios", "textures/gui/curios/inventory.png");
     private final RecipeBookComponent recipeBook = new RecipeBookComponent();
+    private RecipeBookAdapter recipeBookAdapter;
     private boolean recipeBookInitialized;
     private int playerPanelOffsetX;
     private int playerPanelOffsetY;
@@ -121,12 +124,13 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
             desiredBookX = right + 14;
         }
         int virtualWidth = 2 * (desiredBookX + 86) + RecipeBookComponent.IMAGE_WIDTH;
-        var adapter = integratedMenu().recipeBookAdapter();
-        recipeBook.init(virtualWidth, height, minecraft, false, adapter);
+        recipeBookAdapter = integratedMenu().recipeBookAdapter();
+        recipeBook.init(virtualWidth, height, minecraft, false, recipeBookAdapter);
         minecraft.player.containerMenu = integratedMenu();
         recipeBookInitialized = true;
         addRenderableWidget(new ImageButton(right + 104, playerTop + 61, 20, 18,
-                RecipeBookComponent.RECIPE_BUTTON_SPRITES, button -> recipeBook.toggleVisibility()));
+                RecipeBookComponent.RECIPE_BUTTON_SPRITES,
+                button -> withRecipeBookMenu(recipeBook::toggleVisibility)));
         addWidget(recipeBook);
     }
 
@@ -379,7 +383,7 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (recipeBookInitialized && recipeBook.keyPressed(keyCode, scanCode, modifiers)) {
+        if (recipeBookInitialized && withRecipeBookMenuResult(() -> recipeBook.keyPressed(keyCode, scanCode, modifiers))) {
             return true;
         }
         if (isTextBoxFocused()) {
@@ -403,13 +407,13 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return recipeBookInitialized && recipeBook.charTyped(codePoint, modifiers)
+        return recipeBookInitialized && withRecipeBookMenuResult(() -> recipeBook.charTyped(codePoint, modifiers))
                 || super.charTyped(codePoint, modifiers);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (recipeBookInitialized && recipeBook.mouseClicked(mouseX, mouseY, button)) {
+        if (recipeBookInitialized && withRecipeBookMenuResult(() -> recipeBook.mouseClicked(mouseX, mouseY, button))) {
             setFocused(recipeBook);
             return true;
         }
@@ -428,7 +432,7 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
             updateCuriosPageButtons();
         }
         if (recipeBookInitialized) {
-            recipeBook.tick();
+            withRecipeBookMenu(recipeBook::tick);
         }
     }
 
@@ -444,7 +448,7 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
         }
         super.slotClicked(slot, slotId, mouseButton, type);
         if (recipeBookInitialized) {
-            recipeBook.recipesUpdated();
+            withRecipeBookMenu(recipeBook::recipesUpdated);
         }
     }
 
@@ -476,8 +480,31 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
     @Override
     public void recipesUpdated() {
         if (recipeBookInitialized) {
-            recipeBook.recipesUpdated();
+            withRecipeBookMenu(recipeBook::recipesUpdated);
         }
+    }
+
+    /**
+     * Vanilla stores the adapter directly on RecipeBookComponent, but some
+     * recipe-book optimization mixins read and cast LocalPlayer.containerMenu
+     * instead. Expose the adapter only for the duration of recipe-book calls so
+     * those mixins see the type they require without weakening the real menu.
+     */
+    private void withRecipeBookMenu(Runnable action) {
+        var player = minecraft.player;
+        var actual = player.containerMenu;
+        player.containerMenu = recipeBookAdapter;
+        try {
+            action.run();
+        } finally {
+            if (player.containerMenu == recipeBookAdapter) player.containerMenu = actual;
+        }
+    }
+
+    private boolean withRecipeBookMenuResult(BooleanSupplier action) {
+        final boolean[] result = {false};
+        withRecipeBookMenu((Runnable) () -> result[0] = action.getAsBoolean());
+        return result[0];
     }
 
     @Override

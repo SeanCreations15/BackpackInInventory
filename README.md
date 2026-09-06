@@ -66,6 +66,7 @@ Release compatibility so far:
 
 | Client | Minimum server | Update type |
 | --- | --- | --- |
+| 0.2.2 | 0.2.0 | Client-only |
 | 0.2.1 | 0.2.0 | Client-only |
 | 0.2.0 | 0.2.0 | Server update required |
 | 0.1.12 | 0.1.6 | Client-only |
