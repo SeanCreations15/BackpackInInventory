@@ -16,6 +16,9 @@ public final class ClientSetup {
 
     private static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.INTEGRATED_BACKPACK.get(), IntegratedBackpackScreen::new);
+        if (net.neoforged.fml.ModList.get().isLoaded("sophisticatedstorage")) {
+            StorageClientCompat.register(event);
+        }
         TrashSlotClientCompat.register();
     }
 }

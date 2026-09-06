@@ -3,5 +3,9 @@
   "gui.backpackininventory.previous_backpack": "Previous backpack",
   "gui.backpackininventory.next_backpack": "Next backpack",
   "gui.backpackininventory.worn_backpack": "Equipped backpack",
-  "gui.backpackininventory.carried_backpack": "Carried backpack"
+  "gui.backpackininventory.carried_backpack": "Carried backpack",
+  "gui.backpackininventory.manage": "Manage backpack",
+  "gui.backpackininventory.locked": "This backpack is open. Manage it to safely move or unequip it.",
+  "gui.backpackininventory.previous_curios": "Previous Curios page",
+  "gui.backpackininventory.next_curios": "Next Curios page"
 }

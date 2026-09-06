@@ -169,6 +169,13 @@ public class IntegratedBackpackMenu extends BackpackContainer {
         return selectedUuid.isPresent() && selectedUuid.equals(stackUuid);
     }
 
+    @Override public void clicked(int index, int button, net.minecraft.world.inventory.ClickType type, Player player) {
+        if (index >= 0 && index < getTotalSlotsNumber() && isSelectedBackpack(getSlot(index).getItem())) return;
+        if (type == net.minecraft.world.inventory.ClickType.SWAP && button >= 0 && button < player.getInventory().getContainerSize()
+                && isSelectedBackpack(player.getInventory().getItem(button))) return;
+        super.clicked(index, button, type, player);
+    }
+
     public CraftingContainer craftSlots() {
         return craftSlots;
     }
@@ -192,7 +199,7 @@ public class IntegratedBackpackMenu extends BackpackContainer {
         }
 
         Slot source = getSlot(index);
-        if (!source.hasItem()) {
+        if (!source.hasItem() || !source.mayPickup(player)) {
             return ItemStack.EMPTY;
         }
         ItemStack sourceStack = source.getItem();

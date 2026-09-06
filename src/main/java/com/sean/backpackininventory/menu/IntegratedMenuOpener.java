@@ -13,7 +13,11 @@ public final class IntegratedMenuOpener {
     }
 
     public static boolean open(ServerPlayer player, Optional<UUID> requested) {
-        List<LocatedBackpack> found = BackpackLocator.find(player);
+        return open(player, requested, false);
+    }
+
+    public static boolean open(ServerPlayer player, Optional<UUID> requested, boolean equippedOnly) {
+        List<LocatedBackpack> found = BackpackLocator.find(player).stream().filter(b -> !equippedOnly || b.worn()).toList();
         Optional<LocatedBackpack> selected;
         if (requested.isPresent()) {
             selected = found.stream().filter(backpack -> backpack.uuid().equals(requested.get())).findFirst();

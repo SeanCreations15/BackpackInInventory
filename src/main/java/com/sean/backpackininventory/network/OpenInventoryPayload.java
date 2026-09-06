@@ -11,11 +11,12 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.p3pp3rf1y.sophisticatedbackpacks.common.gui.BackpackSettingsContainerMenu;
 
-public record OpenInventoryPayload() implements CustomPacketPayload {
+public record OpenInventoryPayload(boolean equippedOnly) implements CustomPacketPayload {
+    public OpenInventoryPayload() { this(false); }
     public static final Type<OpenInventoryPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackInInventory.MOD_ID, "open_inventory"));
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenInventoryPayload> STREAM_CODEC =
-            StreamCodec.unit(new OpenInventoryPayload());
+            StreamCodec.of((buf, payload) -> buf.writeBoolean(payload.equippedOnly()), buf -> new OpenInventoryPayload(buf.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -27,7 +28,7 @@ public record OpenInventoryPayload() implements CustomPacketPayload {
             boolean validSourceMenu = player.containerMenu instanceof InventoryMenu
                     || player.containerMenu instanceof BackpackSettingsContainerMenu;
             if (player.isCreative() || player.isSpectator() || !validSourceMenu
-                    || !IntegratedMenuOpener.open(player, java.util.Optional.empty())) {
+                    || !IntegratedMenuOpener.open(player, java.util.Optional.empty(), payload.equippedOnly())) {
                 context.reply(new OpenVanillaPayload());
             }
         }

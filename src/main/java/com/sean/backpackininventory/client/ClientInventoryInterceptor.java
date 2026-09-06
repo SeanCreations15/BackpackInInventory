@@ -17,6 +17,7 @@ public final class ClientInventoryInterceptor {
     }
 
     public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (net.neoforged.fml.ModList.get().isLoaded("sophisticatedstorage")) StorageClientCompat.request(event.getNewScreen());
         if (replaceIntegratedSettingsScreen(event)) {
             return;
         }
@@ -32,12 +33,13 @@ public final class ClientInventoryInterceptor {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.player.isCreative() || minecraft.player.isSpectator() || !hasBackpack()) {
+        if (minecraft.player == null || minecraft.player.isCreative() || minecraft.player.isSpectator()
+                || ClientPreferences.OPENING_MODE.get() == ClientPreferences.OpeningMode.VANILLA || !hasBackpack()) {
             return;
         }
 
         event.setNewScreen(null);
-        PacketDistributor.sendToServer(new OpenInventoryPayload());
+        PacketDistributor.sendToServer(new OpenInventoryPayload(ClientPreferences.OPENING_MODE.get() == ClientPreferences.OpeningMode.EQUIPPED_ONLY));
     }
 
     private static boolean replaceIntegratedSettingsScreen(ScreenEvent.Opening event) {
@@ -60,6 +62,8 @@ public final class ClientInventoryInterceptor {
         Minecraft minecraft = Minecraft.getInstance();
         boolean[] found = {false};
         PlayerInventoryProvider.get().runOnBackpacks(minecraft.player, (stack, handler, identifier, slot) -> {
+            if (ClientPreferences.OPENING_MODE.get() == ClientPreferences.OpeningMode.EQUIPPED_ONLY
+                    && (handler.equals(PlayerInventoryProvider.MAIN_INVENTORY) || handler.equals(PlayerInventoryProvider.OFFHAND_INVENTORY))) return false;
             found[0] = true;
             return true;
         });

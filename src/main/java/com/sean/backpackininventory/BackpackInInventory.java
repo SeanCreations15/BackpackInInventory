@@ -12,11 +12,13 @@ import com.sean.backpackininventory.network.ModPayloads;
 public final class BackpackInInventory {
     public static final String MOD_ID = "backpackininventory";
 
-    public BackpackInInventory(IEventBus modBus, Dist dist) {
+    public BackpackInInventory(IEventBus modBus, Dist dist, net.neoforged.fml.ModContainer container) {
         ModMenus.REGISTER.register(modBus);
         ModAttachments.REGISTER.register(modBus);
         modBus.addListener(ModPayloads::register);
         if (dist == Dist.CLIENT) {
+            container.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT,
+                    com.sean.backpackininventory.client.ClientPreferences.SPEC);
             ClientSetup.register(modBus);
         }
     }

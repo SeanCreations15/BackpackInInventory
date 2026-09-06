@@ -60,9 +60,13 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
 
     @Override
     protected void init() {
+        curiosPreviousPage = null;
+        curiosNextPage = null;
+        curiosPage = ClientPreferences.rememberedCuriosPage;
         int actualWidth = width;
         int largestFittingGap = actualWidth - imageWidth - VANILLA_WIDTH - 2 * MIN_EDGE_MARGIN;
         panelGap = Math.max(MIN_PANEL_GAP, Math.min(PREFERRED_PANEL_GAP, largestFittingGap));
+        curiosPage = drawerLayout().page();
         int combinedWidth = imageWidth + panelGap + VANILLA_WIDTH;
         int storageLeft = (actualWidth - combinedWidth) / 2;
         int vanillaLeft = storageLeft + imageWidth + panelGap;
@@ -84,6 +88,11 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
         // an inventory title, so keep the inherited label out of the player-model area.
         inventoryLabelY = -10_000;
         initRecipeBook();
+        int manageX = leftPos + playerPanelOffsetX;
+        int manageY = topPos + playerPanelOffsetY - 20;
+        addRenderableWidget(Button.builder(Component.translatable("gui.backpackininventory.manage"), b -> manageBackpack())
+                .tooltip(Tooltip.create(Component.translatable("gui.backpackininventory.locked")))
+                .bounds(manageX, manageY, 104, 18).build());
         if (ModList.get().isLoaded("curios")) {
             CuriosClientCompat.createInventoryButton(this, leftPos + playerPanelOffsetX,
                             topPos + playerPanelOffsetY, this::toggleCuriosDrawer)
@@ -207,9 +216,28 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
     }
 
     private void toggleCuriosDrawer() {
+        if (!curiosOpen && getUpgradeSettingsControl() != null
+                && getUpgradeSettingsControl().getOpenTab().isPresent()) {
+            getUpgradeSettingsControl().getOpenTab().get().close();
+        }
         curiosOpen = !curiosOpen;
         updateCuriosSlotsPositions();
         updateCuriosPageButtons();
+    }
+
+    private void manageBackpack() {
+        for (int i = 0; i < integratedMenu().curiosSlotCount(); i++) {
+            Slot slot = getMenu().getSlot(integratedMenu().curiosStart() + i);
+            if (integratedMenu().isSelectedBackpack(slot.getItem())) {
+                CuriosClientCompat.openManagementScreen(getMenu().getCarried());
+                return;
+            }
+        }
+        openVanillaInventoryForBackpackMove();
+    }
+
+    private DrawerLayout drawerLayout() {
+        return DrawerLayout.calculate(integratedMenu().curiosSlotCount(), panelGap, curiosPage);
     }
 
     private void initCuriosPageButtons() {
@@ -217,23 +245,23 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
             return;
         }
         curiosPreviousPage = addRenderableWidget(Button.builder(Component.literal("<"), button -> changeCuriosPage(-1))
-                .tooltip(Tooltip.create(Component.literal("Previous Curios page")))
+                .tooltip(Tooltip.create(Component.translatable("gui.backpackininventory.previous_curios")))
                 .bounds(0, 0, 16, 14).build());
         curiosNextPage = addRenderableWidget(Button.builder(Component.literal(">"), button -> changeCuriosPage(1))
-                .tooltip(Tooltip.create(Component.literal("Next Curios page")))
+                .tooltip(Tooltip.create(Component.translatable("gui.backpackininventory.next_curios")))
                 .bounds(0, 0, 16, 14).build());
         updateCuriosPageButtons();
     }
 
     private void changeCuriosPage(int direction) {
         curiosPage = Math.floorMod(curiosPage + direction, curiosPageCount());
+        ClientPreferences.rememberedCuriosPage = curiosPage;
         updateCuriosSlotsPositions();
         updateCuriosPageButtons();
     }
 
     private int curiosColumnsPerPage() {
-        int fittingColumns = Math.max(1, (panelGap - 7) / 18);
-        return Math.min(CURIOS_MAX_COLUMNS, fittingColumns);
+        return drawerLayout().columns();
     }
 
     private int curiosPageCapacity() {
@@ -280,6 +308,7 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
         if (count == 0) {
             return;
         }
+        curiosPage = drawerLayout().page();
         int firstVisible = curiosPage * curiosPageCapacity();
         int visibleCount = curiosVisibleSlotCount();
         int columns = curiosVisibleColumns();
@@ -306,6 +335,10 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
         int count = curiosVisibleSlotCount();
         int columns = curiosVisibleColumns();
         int rows = (count + columns - 1) / columns;
+        if (curiosPageCount() > 1) {
+            graphics.drawCenteredString(font, (curiosPage + 1) + "/" + curiosPageCount(),
+                    playerLeft - 7 - columns * 9, playerTop - 27, 0xffffffff);
+        }
         int panelX = playerLeft - 33 - (columns - 1) * 18;
         for (int column = 0; column < columns; column++) {
             int bodyHeight = 7 + rows * 18;
@@ -386,6 +419,14 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
     @Override
     protected void containerTick() {
         super.containerTick();
+        // Expanded upgrade controls take priority over the shared middle corridor.
+        // Collapse the drawer before the two interactive slot areas can overlap.
+        if (curiosOpen && getUpgradeSettingsControl() != null
+                && getUpgradeSettingsControl().getOpenTab().isPresent()) {
+            curiosOpen = false;
+            updateCuriosSlotsPositions();
+            updateCuriosPageButtons();
+        }
         if (recipeBookInitialized) {
             recipeBook.tick();
         }
@@ -519,6 +560,13 @@ public final class IntegratedBackpackScreen extends StorageScreenBase<Integrated
         hoveredSlot = slot;
         renderSlotHighlight(graphics, slot.x, slot.y, 0, getSlotColor(slot.index));
         return true;
+    }
+
+    @Override protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (hoveredSlot != null && integratedMenu().isSelectedBackpack(hoveredSlot.getItem())) {
+            graphics.renderComponentTooltip(font, List.of(hoveredSlot.getItem().getHoverName(),
+                    Component.translatable("gui.backpackininventory.locked")), mouseX, mouseY);
+        } else super.renderTooltip(graphics, mouseX, mouseY);
     }
 
     private java.util.Optional<BackpackDescriptor> selectedDescriptor() {

@@ -66,11 +66,15 @@ dependencies {
     implementation('curse.maven:sophisticated-core-618298:8705083') { transitive = false }
     implementation('curse.maven:sophisticated-backpacks-422301:8687841') { transitive = false }
     compileOnly('curse.maven:trashslot-235577:8163135') { transitive = false }
+    compileOnly('curse.maven:sophisticated-storage-619320:8687896') { transitive = false }
     compileOnly 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
     compileOnly 'mezz.jei:jei-1.21.1-neoforge:19.44.0.403'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+    if (providers.gradleProperty('testStorage').isPresent()) {
+        testRuntimeOnly('curse.maven:sophisticated-storage-619320:8687896') { transitive = false }
+    }
 }
 
 tasks.named('test') {

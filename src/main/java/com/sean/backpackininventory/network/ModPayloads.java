@@ -7,7 +7,8 @@ public final class ModPayloads {
     }
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        var registrar = event.registrar("2");
+        registrar.playToServer(OpenStoragePayload.TYPE, OpenStoragePayload.STREAM_CODEC, OpenStoragePayload::handle);
         registrar.playToServer(OpenInventoryPayload.TYPE, OpenInventoryPayload.STREAM_CODEC, OpenInventoryPayload::handle);
         registrar.playToServer(SelectBackpackPayload.TYPE, SelectBackpackPayload.STREAM_CODEC, SelectBackpackPayload::handle);
         registrar.playToServer(PlaceRecipePayload.TYPE, PlaceRecipePayload.STREAM_CODEC, PlaceRecipePayload::handle);

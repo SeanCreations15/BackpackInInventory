@@ -13,6 +13,10 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<IntegratedBackpackMenu>> INTEGRATED_BACKPACK =
             REGISTER.register("integrated_backpack", () -> IMenuTypeExtension.create(IntegratedBackpackMenu::fromBuffer));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.sean.backpackininventory.compat.storage.StorageBackpackMenu>> STORAGE_BACKPACK =
+            net.neoforged.fml.ModList.get().isLoaded("sophisticatedstorage")
+            ? REGISTER.register("storage_backpack", () -> IMenuTypeExtension.create(com.sean.backpackininventory.compat.storage.StorageBackpackMenu::fromBuffer)) : null;
+
     private ModMenus() {
     }
 }
