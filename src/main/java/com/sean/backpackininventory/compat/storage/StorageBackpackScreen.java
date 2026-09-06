@@ -65,6 +65,29 @@ public final class StorageBackpackScreen extends StorageScreen {
         // Called by upstream during initialization; absolute anchors are set afterwards.
         if (rows > 0) positionBackpack();
     }
+
+    @Override protected void updatePlayerSlotsPositions() {
+        // StorageScreenBase assumes the final 36 ordinary slots are the player
+        // inventory. Our backpack follows those slots, so position the real
+        // player partition explicitly instead.
+        int start = getMenu().getNumberOfStorageInventorySlots();
+        int x = storageBackgroundProperties.getPlayerInventoryXOffset() + 8;
+        int y = inventoryLabelY + 12;
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 9; column++) {
+                Slot slot = getMenu().getSlot(start + row * 9 + column);
+                slot.x = x + column * 18;
+                slot.y = y + row * 18;
+            }
+        }
+        y += 58;
+        for (int column = 0; column < 9; column++) {
+            Slot slot = getMenu().getSlot(start + 27 + column);
+            slot.x = x + column * 18;
+            slot.y = y;
+        }
+    }
+
     private void positionBackpack() {
         page = Math.max(0, Math.min(page, pages() - 1));
         int first = page * capacity();
@@ -81,6 +104,16 @@ public final class StorageBackpackScreen extends StorageScreen {
         int actualWidth = width;
         width = virtualWidth;
         try { super.renderBg(graphics, partial, mouseX, mouseY); } finally { width = actualWidth; }
+        // Some upgraded chests use a non-square slot count. Drawing each active
+        // slot at its actual position avoids the upstream batch background being
+        // transposed and leaving interactive blank cells.
+        for (int i = 0; i < getMenu().getNumberOfStorageInventorySlots(); i++) {
+            Slot slot = getMenu().getSlot(i);
+            if (slot.isActive() && slot.x > -1000) {
+                graphics.blit(AbstractContainerScreen.INVENTORY_LOCATION,
+                        leftPos + slot.x - 1, topPos + slot.y - 1, 7, 83, 18, 18);
+            }
+        }
         int panelHeight = rows * 18 + 28;
         graphics.fill(panelX - 1, panelY - 1, panelX + 177, panelY + panelHeight + 1, 0xff151515);
         graphics.fill(panelX, panelY, panelX + 176, panelY + panelHeight, 0xffc6c6c6);
@@ -97,12 +130,11 @@ public final class StorageBackpackScreen extends StorageScreen {
         // StorageScreenBase draws only the final 36 non-storage slots. Repair the
         // prefix excluded by the additional backpack slots, just as in the E screen.
         int storageStart = getMenu().getNumberOfStorageInventorySlots();
-        int skippedPlayer = Math.min(36, combined().backpackCount());
         int skippedBackpack = Math.max(0, combined().backpackCount() - 36);
         graphics.pose().pushPose();
         graphics.pose().translate(leftPos, topPos, 0);
         boolean hovered = false;
-        for (int i = 0; i < skippedPlayer; i++) {
+        for (int i = 0; i < 36; i++) {
             Slot slot = getMenu().getSlot(storageStart + i);
             if (!slot.isActive() || slot.x < -1000) continue;
             renderSlot(graphics, slot);

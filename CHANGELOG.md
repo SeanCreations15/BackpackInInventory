@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+Client-only update compatible with server 0.2.0.
+
+- Correct player-slot positioning and rendering in the Sophisticated Storage
+  combined screen.
+- Draw upgraded chest slot backgrounds at their actual positions so non-square,
+  oversized layouts do not leave interactive blank cells.
+
 ## 0.2.0
 
 Server update required. Network protocol 2; client and server must both run
