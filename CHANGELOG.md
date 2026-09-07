@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+Protocol-compatible server hotfix for 0.3.0 clients.
+
+- Register the companion backpack cells as Sophisticated Core extra slots so
+  Sophisticated Storage's slot-integrity check accepts the combined menu instead
+  of closing it on the first server tick.
+
 ## 0.3.0
 
 Server update required. Network protocol 3; client and server must both run

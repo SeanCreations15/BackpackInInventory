@@ -67,12 +67,12 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
         SimpleContainer clientItems = new SimpleContainer(backpack.count());
         for (int i = 0; i < backpack.count(); i++) {
             if (backpack.handler() == null) {
-                addSlot(new Slot(clientItems, i, -2000, -2000) {
+                addExtraSlot(new Slot(clientItems, i, -2000, -2000) {
                     @Override public int getMaxStackSize() { return Integer.MAX_VALUE; }
                     @Override public int getMaxStackSize(ItemStack stack) { return Integer.MAX_VALUE; }
                 });
             } else {
-                addSlot(new SlotItemHandler(backpack.handler(), i, -2000, -2000) {
+                addExtraSlot(new SlotItemHandler(backpack.handler(), i, -2000, -2000) {
                     @Override public boolean mayPlace(ItemStack stack) { return !isBacking(stack) && super.mayPlace(stack); }
                     @Override public int getMaxStackSize(ItemStack stack) { return getMaxStackSize(); }
                 });
