@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+Server update required. Network protocol 3; client and server must both run
+0.3.0.
+
+- Show the selected backpack beside vanilla and modded container screens,
+  including barrels, crafting tables, anvils, furnaces, and Sophisticated
+  Storage chests.
+- Preserve the backpack's full 9- or 12-column layout instead of repacking it
+  into pages when a large container is open.
+- Make shift-click routing deterministic: player and backpack items target the
+  opened container; container items target the player first and overflow into
+  the backpack only when the player inventory cannot accept them.
+- Keep Sophisticated Storage on its native menu and renderer while applying the
+  same full-size companion layout.
+
 ## 0.2.2
 
 Client-only update compatible with server 0.2.0.

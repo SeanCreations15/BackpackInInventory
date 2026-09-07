@@ -12,6 +12,7 @@ public final class ClientSetup {
     public static void register(IEventBus modBus) {
         modBus.addListener(ClientSetup::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientInventoryInterceptor::onScreenOpening);
+        NeoForge.EVENT_BUS.addListener(ContainerCompanionClient::renderBackground);
     }
 
     private static void registerScreens(RegisterMenuScreensEvent event) {

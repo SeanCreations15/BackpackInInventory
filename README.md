@@ -13,9 +13,12 @@ inventory, so items can be moved between both without opening a separate screen.
 - Selects between accessible equipped and carried top-level backpacks. Hover the
   selector icon to see whether the current backpack is equipped or carried.
 - Preserves Curios access from the player inventory when Curios is installed.
-- Keeps supported Sophisticated Storage chests as the primary container and
-  adds a separately paged backpack panel on the left, including for very large
-  chests. Native chest scrolling, upgrades, and controls remain available.
+- Shows the selected backpack at its full native width beside opened vanilla
+  and modded containers, including barrels, crafting tables, anvils, furnaces,
+  and Sophisticated Storage chests. Native container controls remain available.
+- Routes shift-clicks from the player or backpack into the opened container.
+  Items leaving the container target the player first and only overflow into
+  the backpack when the player inventory is full.
 - Adds a visible Manage Backpack action, a locked-backpack explanation, a
   remembered Curios page, and safer Curios/upgrade-panel spacing.
 - Remembers the selected backpack on the server and validates ownership again
@@ -44,15 +47,15 @@ After the first launch, edit `config/backpackininventory-client.toml` to choose:
 
 - `ANY_BACKPACK` — open the combined inventory for any accessible top-level backpack.
 - `EQUIPPED_ONLY` — only use backpacks equipped in armor or Curios slots.
-- `VANILLA` — leave the normal inventory and supported chest screens unchanged.
-- `chestIntegration` — independently enable or disable the Sophisticated
-  Storage side panel.
+- `VANILLA` — leave the normal inventory and container screens unchanged.
+- `chestIntegration` — legacy config-key name that independently enables or
+  disables the backpack side panel for all opened containers.
 
 ## Client and server version policy
 
 The client and server do not need matching patch versions while the shared menu
-and network protocol remain unchanged. Version 0.2.0 uses protocol `2`; its
-minimum server release is therefore `0.2.0`.
+and network protocol remain unchanged. Version 0.3.0 uses protocol `3` and must
+be installed on both sides.
 
 Every release will be labelled as one of the following:
 
@@ -66,6 +69,7 @@ Release compatibility so far:
 
 | Client | Minimum server | Update type |
 | --- | --- | --- |
+| 0.3.0 | 0.3.0 | Server update required |
 | 0.2.2 | 0.2.0 | Client-only |
 | 0.2.1 | 0.2.0 | Client-only |
 | 0.2.0 | 0.2.0 | Server update required |
@@ -100,11 +104,11 @@ the next normal inventory opening allows moving the unequipped backpack.
 
 ## Project status
 
-Version 0.1.12 remains the prior in-game-tested baseline. Version 0.2.0 adds the
-quality-of-life and Sophisticated Storage work described above and requires an
-updated server. Automated tests cover selection data, fallback logic, and drawer
-pagination; they are not a substitute for multiplayer inventory-interaction
-testing. See [ROADMAP.md](ROADMAP.md) for the remaining verification work.
+Version 0.1.12 remains the prior in-game-tested baseline. Version 0.3.0 adds the
+general container companion and deterministic transfer routing described above
+and requires an updated server. Automated tests cover selection data and fallback
+logic; they are not a substitute for multiplayer inventory-interaction testing.
+See [ROADMAP.md](ROADMAP.md) for the remaining verification work.
 
 ## License
 

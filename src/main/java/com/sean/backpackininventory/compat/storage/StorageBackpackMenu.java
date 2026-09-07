@@ -2,6 +2,7 @@ package com.sean.backpackininventory.compat.storage;
 
 import com.sean.backpackininventory.init.ModMenus;
 import com.sean.backpackininventory.menu.BackpackLocator;
+import com.sean.backpackininventory.menu.CompanionBackpackData;
 import com.sean.backpackininventory.menu.LocatedBackpack;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ import net.p3pp3rf1y.sophisticatedstorage.common.gui.StorageContainerMenu;
 
 /** The chest remains the primary Sophisticated menu, including its upgrades. */
 public final class StorageBackpackMenu extends StorageContainerMenu {
-    private record Opening(UUID uuid, IItemHandler handler, int count, ItemStack icon) { }
+    private record Opening(UUID uuid, IItemHandler handler, int count, int columns, ItemStack icon) { }
     private static final ThreadLocal<Opening> OPENING = new ThreadLocal<>();
     private Opening backpack;
     private int backpackStart;
@@ -29,8 +30,12 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
     }
 
     public static StorageBackpackMenu create(int id, Player player, BlockPos pos, LocatedBackpack selected) {
-        var handler = selected.context().getBackpackWrapper(player).getInventoryHandler();
-        return construct(id, player, pos, new Opening(selected.uuid(), handler, handler.getSlots(), selected.stack().copy()));
+        var wrapper = selected.context().getBackpackWrapper(player);
+        var handler = wrapper.getInventoryHandler();
+        int rows = Math.max(1, wrapper.getNumberOfSlotRows());
+        int columns = CompanionBackpackData.columnsFor(handler.getSlots(), rows);
+        return construct(id, player, pos,
+                new Opening(selected.uuid(), handler, handler.getSlots(), columns, selected.stack().copy()));
     }
 
     private static StorageBackpackMenu construct(int id, Player player, BlockPos pos, Opening opening) {
@@ -44,8 +49,10 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
         UUID uuid = buffer.readUUID();
         int count = buffer.readVarInt();
         if (count < 1 || count > 4096) throw new IllegalArgumentException("Invalid backpack slot count");
+        int columns = buffer.readVarInt();
+        if (columns < 1 || columns > 12) throw new IllegalArgumentException("Invalid backpack column count");
         ItemStack icon = ItemStack.STREAM_CODEC.decode(buffer);
-        return construct(id, inventory.player, pos, new Opening(uuid, null, count, icon));
+        return construct(id, inventory.player, pos, new Opening(uuid, null, count, columns, icon));
     }
 
     @Override
@@ -60,12 +67,12 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
         SimpleContainer clientItems = new SimpleContainer(backpack.count());
         for (int i = 0; i < backpack.count(); i++) {
             if (backpack.handler() == null) {
-                addExtraSlot(new Slot(clientItems, i, -2000, -2000) {
+                addSlot(new Slot(clientItems, i, -2000, -2000) {
                     @Override public int getMaxStackSize() { return Integer.MAX_VALUE; }
                     @Override public int getMaxStackSize(ItemStack stack) { return Integer.MAX_VALUE; }
                 });
             } else {
-                addExtraSlot(new SlotItemHandler(backpack.handler(), i, -2000, -2000) {
+                addSlot(new SlotItemHandler(backpack.handler(), i, -2000, -2000) {
                     @Override public boolean mayPlace(ItemStack stack) { return !isBacking(stack) && super.mayPlace(stack); }
                     @Override public int getMaxStackSize(ItemStack stack) { return getMaxStackSize(); }
                 });
@@ -78,6 +85,7 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
 
     public int backpackStart() { return backpackStart; }
     public int backpackCount() { return backpack.count(); }
+    public int backpackColumns() { return backpack.columns(); }
     public ItemStack backpackIcon() { return backpack.icon(); }
     public boolean isBacking(ItemStack stack) {
         if (!(stack.getItem() instanceof net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem)) return false;
@@ -107,15 +115,30 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
     @Override public ItemStack quickMoveStack(Player player, int index) {
         Slot source = getSlot(index);
         if (!source.mayPickup(player) || isBacking(source.getItem())) return ItemStack.EMPTY;
-        if (index < backpackStart || index >= backpackStart + backpackCount()) return super.quickMoveStack(player, index);
-        ItemStack stack = source.getItem();
-        if (stack.isEmpty()) return ItemStack.EMPTY;
-        ItemStack original = stack.copy();
-        // Backpack shift-click goes to the chest; chest/player retain upstream routing.
-        if (!moveItemStackTo(stack, 0, getNumberOfStorageInventorySlots(), false)) return ItemStack.EMPTY;
-        if (stack.isEmpty()) source.setByPlayer(ItemStack.EMPTY, original);
-        else source.setChanged();
-        source.onTake(player, stack);
-        return original;
+        int storageEnd = getNumberOfStorageInventorySlots();
+        boolean fromBackpack = index >= backpackStart && index < backpackStart + backpackCount();
+        boolean fromPlayer = index >= storageEnd && index < storageEnd + 36;
+        boolean fromStorage = index >= 0 && index < storageEnd;
+        if (fromBackpack || fromPlayer || fromStorage) {
+            ItemStack stack = source.getItem();
+            if (stack.isEmpty()) return ItemStack.EMPTY;
+            ItemStack original = stack.copy();
+            boolean moved;
+            if (fromBackpack || fromPlayer) {
+                moved = moveItemStackTo(stack, 0, storageEnd, false);
+            } else {
+                moved = moveItemStackTo(stack, storageEnd, storageEnd + 36, true);
+                if (!stack.isEmpty()) {
+                    moved |= moveItemStackTo(stack, backpackStart, backpackStart + backpackCount(), false);
+                }
+            }
+            if (!moved) return ItemStack.EMPTY;
+            if (stack.isEmpty()) source.setByPlayer(ItemStack.EMPTY, original);
+            else source.setChanged();
+            source.onQuickCraft(stack, original);
+            source.onTake(player, stack);
+            return original;
+        }
+        return super.quickMoveStack(player, index);
     }
 }

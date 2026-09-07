@@ -11,7 +11,7 @@ import net.p3pp3rf1y.sophisticatedstorage.client.gui.StorageScreen;
 final class StorageClientCompat {
     static void register(RegisterMenuScreensEvent event) { event.register(ModMenus.STORAGE_BACKPACK.get(), StorageBackpackScreen::new); }
     static void request(Screen screen) {
-        if (screen != null && screen.getClass() == StorageScreen.class && ClientPreferences.CHESTS.get()
+        if (screen != null && screen.getClass() == StorageScreen.class && ClientPreferences.CONTAINERS.get()
                 && ClientPreferences.OPENING_MODE.get() != ClientPreferences.OpeningMode.VANILLA) {
             var storage = (StorageScreen) screen;
             PacketDistributor.sendToServer(new OpenStoragePayload(storage.getMenu().containerId,

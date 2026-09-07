@@ -17,7 +17,10 @@ public final class ClientInventoryInterceptor {
     }
 
     public static void onScreenOpening(ScreenEvent.Opening event) {
-        if (net.neoforged.fml.ModList.get().isLoaded("sophisticatedstorage")) StorageClientCompat.request(event.getNewScreen());
+        if (net.neoforged.fml.ModList.get().isLoaded("sophisticatedstorage")) {
+            StorageClientCompat.request(event.getNewScreen());
+        }
+        ContainerCompanionClient.request(event.getNewScreen());
         if (replaceIntegratedSettingsScreen(event)) {
             return;
         }

@@ -3,6 +3,10 @@
   "minVersion": "0.8",
   "package": "com.sean.backpackininventory.mixin",
   "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AbstractContainerMenuAccessor",
+    "AbstractContainerMenuMixin"
+  ],
   "client": [
     "RecipeBookComponentMixin"
   ],
