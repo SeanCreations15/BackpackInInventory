@@ -97,6 +97,15 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
         return index >= getFirstUpgradeSlot() + getNumberOfUpgradeSlots() && index < getTotalSlotsNumber();
     }
 
+    @Override public boolean hasSomethingMessedWithStorage() {
+        // Sophisticated Core's private extraSlotsSize counter is cumulative when
+        // refreshAllSlots rebuilds a menu. Large/double chests can trigger that
+        // refresh while their upgrade-column layout is synchronized, which makes
+        // the inherited integrity check reject an otherwise correct slot list.
+        return StorageMenuSlotAccounting.isInvalid(isClientSide(), slots.size(),
+                getNumberOfStorageInventorySlots(), backpackCount());
+    }
+
     @Override public boolean stillValid(Player player) {
         if (!super.stillValid(player)) return false;
         if (player.level().isClientSide) return true;

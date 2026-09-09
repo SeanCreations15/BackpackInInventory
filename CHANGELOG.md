@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.2
+
+Protocol-compatible server hotfix for 0.3.x clients.
+
+- Keep large and double Sophisticated Storage chests open when their
+  upgrade-column layout causes Sophisticated Core to rebuild the menu slots.
+- Validate the stable combined layout directly instead of relying on Core's
+  cumulative private extra-slot counter.
+
 ## 0.3.1
 
 Protocol-compatible server hotfix for 0.3.0 clients.
