@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3
+
+Protocol-compatible server hotfix for 0.3.x clients.
+
+- Rebuild the combined menu once when a joined/double Sophisticated Storage
+  chest synchronizes a different authoritative slot count during opening.
+- Log the complete slot counts if a rebuilt combined menu is still invalid.
+
 ## 0.3.2
 
 Protocol-compatible server hotfix for 0.3.x clients.

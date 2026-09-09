@@ -54,8 +54,8 @@ After the first launch, edit `config/backpackininventory-client.toml` to choose:
 ## Client and server version policy
 
 The client and server do not need matching patch versions while the shared menu
-and network protocol remain unchanged. Versions 0.3.0 through 0.3.2 use
-protocol `3`; servers should use 0.3.2 for the latest Sophisticated Storage
+and network protocol remain unchanged. Versions 0.3.0 through 0.3.3 use
+protocol `3`; servers should use 0.3.3 for the latest Sophisticated Storage
 menu hotfixes.
 
 Every release will be labelled as one of the following:
@@ -70,6 +70,7 @@ Release compatibility so far:
 
 | Client | Minimum server | Update type |
 | --- | --- | --- |
+| 0.3.3 | 0.3.3 | Server hotfix; protocol-compatible with 0.3.x clients |
 | 0.3.2 | 0.3.2 | Server hotfix; protocol-compatible with 0.3.x clients |
 | 0.3.1 | 0.3.1 | Server hotfix; protocol-compatible with 0.3.0 clients |
 | 0.3.0 | 0.3.0 | Server update required |

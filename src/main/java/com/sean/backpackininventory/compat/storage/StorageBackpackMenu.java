@@ -1,5 +1,6 @@
 package com.sean.backpackininventory.compat.storage;
 
+import com.mojang.logging.LogUtils;
 import com.sean.backpackininventory.init.ModMenus;
 import com.sean.backpackininventory.menu.BackpackLocator;
 import com.sean.backpackininventory.menu.CompanionBackpackData;
@@ -17,9 +18,11 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.common.gui.StorageContainerMenu;
+import org.slf4j.Logger;
 
 /** The chest remains the primary Sophisticated menu, including its upgrades. */
 public final class StorageBackpackMenu extends StorageContainerMenu {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private record Opening(UUID uuid, IItemHandler handler, int count, int columns, ItemStack icon) { }
     private static final ThreadLocal<Opening> OPENING = new ThreadLocal<>();
     private Opening backpack;
@@ -98,12 +101,26 @@ public final class StorageBackpackMenu extends StorageContainerMenu {
     }
 
     @Override public boolean hasSomethingMessedWithStorage() {
-        // Sophisticated Core's private extraSlotsSize counter is cumulative when
-        // refreshAllSlots rebuilds a menu. Large/double chests can trigger that
-        // refresh while their upgrade-column layout is synchronized, which makes
-        // the inherited integrity check reject an otherwise correct slot list.
-        return StorageMenuSlotAccounting.isInvalid(isClientSide(), slots.size(),
-                getNumberOfStorageInventorySlots(), backpackCount());
+        if (isClientSide()) return false;
+        int actual = slots.size();
+        int storage = getNumberOfStorageInventorySlots();
+        if (!StorageMenuSlotAccounting.isInvalid(false, actual, storage, backpackCount())) return false;
+
+        // A joined/double storage can publish its authoritative inventory size just
+        // after the replacement menu was built. Rebuild once before treating that
+        // short-lived mismatch as corruption. Our own accounting intentionally does
+        // not use Core's cumulative private extraSlotsSize counter.
+        refreshAllSlots();
+        int rebuiltActual = slots.size();
+        int rebuiltStorage = getNumberOfStorageInventorySlots();
+        boolean invalid = StorageMenuSlotAccounting.isInvalid(
+                false, rebuiltActual, rebuiltStorage, backpackCount());
+        if (invalid) {
+            LOGGER.warn("Closing combined Sophisticated Storage menu after an invalid slot rebuild: "
+                    + "beforeActual={}, beforeStorage={}, rebuiltActual={}, rebuiltStorage={}, backpack={}",
+                    actual, storage, rebuiltActual, rebuiltStorage, backpackCount());
+        }
+        return invalid;
     }
 
     @Override public boolean stillValid(Player player) {
