@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "AbstractContainerMenuAccessor",
-    "AbstractContainerMenuMixin"
+    "AbstractContainerMenuMixin",
+    "StorageContainerMenuBaseAccessor",
+    "StorageContainerMenuBaseMixin"
   ],
   "client": [
     "RecipeBookComponentMixin"

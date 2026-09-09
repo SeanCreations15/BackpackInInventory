@@ -1,6 +1,7 @@
 package com.sean.backpackininventory.menu;
 
 import com.sean.backpackininventory.mixin.AbstractContainerMenuAccessor;
+import com.sean.backpackininventory.mixin.StorageContainerMenuBaseAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,7 @@ import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedbackpacks.common.gui.BackpackContainer;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SettingsContainerMenu;
+import net.p3pp3rf1y.sophisticatedcore.common.gui.StorageContainerMenuBase;
 
 /** Adds a synchronized backpack partition to an otherwise unchanged menu. */
 public final class CompanionBackpackMenus {
@@ -55,18 +57,19 @@ public final class CompanionBackpackMenus {
         int rows = Math.max(1, wrapper.getNumberOfSlotRows());
         int columns = CompanionBackpackData.columnsFor(count, rows);
         int start = menu.slots.size();
+        List<Slot> backpackSlots = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            ((AbstractContainerMenuAccessor) menu).backpackininventory$addSlot(
-                    new SlotItemHandler(handler, i, -2000, -2000) {
-                        @Override public boolean mayPlace(ItemStack stack) {
-                            return !isBackpack(stack, backpack.uuid()) && super.mayPlace(stack);
-                        }
+            backpackSlots.add(new SlotItemHandler(handler, i, -2000, -2000) {
+                @Override public boolean mayPlace(ItemStack stack) {
+                    return !isBackpack(stack, backpack.uuid()) && super.mayPlace(stack);
+                }
 
-                        @Override public int getMaxStackSize(ItemStack stack) {
-                            return getMaxStackSize();
-                        }
-                    });
+                @Override public int getMaxStackSize(ItemStack stack) {
+                    return getMaxStackSize();
+                }
+            });
         }
+        appendSlots(menu, backpackSlots);
         CompanionBackpackData data = new CompanionBackpackData(
                 backpack.uuid(), start, count, columns, backpack.stack().copy());
         ATTACHED.put(menu, data);
@@ -82,16 +85,33 @@ public final class CompanionBackpackMenus {
         }
         int start = menu.slots.size();
         SimpleContainer items = new SimpleContainer(count);
+        List<Slot> backpackSlots = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            ((AbstractContainerMenuAccessor) menu).backpackininventory$addSlot(
-                    new Slot(items, i, -2000, -2000) {
-                        @Override public int getMaxStackSize() { return Integer.MAX_VALUE; }
-                        @Override public int getMaxStackSize(ItemStack stack) { return Integer.MAX_VALUE; }
-                    });
+            backpackSlots.add(new Slot(items, i, -2000, -2000) {
+                @Override public int getMaxStackSize() { return Integer.MAX_VALUE; }
+                @Override public int getMaxStackSize(ItemStack stack) { return Integer.MAX_VALUE; }
+            });
         }
+        appendSlots(menu, backpackSlots);
         CompanionBackpackData data = new CompanionBackpackData(uuid, start, count, columns, icon.copy());
         ATTACHED.put(menu, data);
         return Optional.of(data);
+    }
+
+    private static void appendSlots(AbstractContainerMenu menu, List<Slot> appended) {
+        if (menu instanceof StorageContainerMenuBase<?> storageMenu) {
+            // Mounted Sophisticated Storage menus use Core's slot-integrity check.
+            // Keep the slots in its authoritative extra-slot list so a later layout
+            // refresh recreates them and accounts for them instead of closing.
+            List<Slot> allExtras = new ArrayList<>(storageMenu.getExtraSlots());
+            allExtras.addAll(appended);
+            StorageContainerMenuBaseAccessor accessor = (StorageContainerMenuBaseAccessor) storageMenu;
+            accessor.backpackininventory$setExtraSlots(allExtras);
+            appended.forEach(accessor::backpackininventory$addExtraSlot);
+            return;
+        }
+        AbstractContainerMenuAccessor accessor = (AbstractContainerMenuAccessor) menu;
+        appended.forEach(accessor::backpackininventory$addSlot);
     }
 
     public static boolean handleClick(AbstractContainerMenu menu, int slotId, int button,

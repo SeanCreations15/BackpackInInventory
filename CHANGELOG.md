@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.4
+
+Client-and-server compatibility fix.
+
+- Support the Sophisticated Storage Create Integration mounted-storage screen,
+  including mounted double diamond chests.
+- Register companion backpack slots with Sophisticated Core so its integrity
+  check accepts them and layout refreshes retain them.
+
 ## 0.3.3
 
 Protocol-compatible server hotfix for 0.3.x clients.
